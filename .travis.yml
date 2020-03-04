@@ -6,8 +6,12 @@ node_js:
   - "10"
 git:
   depth: 3
+install:
+  - npm install -g codecov
 script:
   - yarn build --prefix-paths
+after_success:
+  - codecov
 deploy:
   provider: pages
   skip_cleanup: true

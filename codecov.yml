@@ -1,0 +1,7 @@
+codecov:
+  bot: "codecov-io"
+  ci:
+    - "travis.org"
+
+coverage:
+  range: 80..100

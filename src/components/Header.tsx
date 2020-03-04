@@ -1,8 +1,7 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import React, { useState, useEffect, useRef } from 'react'
-import styled, { StyledComponent } from 'styled-components'
+import styled from 'styled-components'
 import Icon, { Octoface, Calendar, Gear, Clock } from '@primer/octicons-react'
-import { Link } from 'gatsby'
 
 interface HeaderProps {
   siteTitle?: string
@@ -83,6 +82,7 @@ const StyledItem = styled.li`
   }
 `
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const StyledClickableItem: React.FC<{ [a: string]: any }> = ({
   children,
   ...rest
