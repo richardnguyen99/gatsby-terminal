@@ -1,73 +1,34 @@
+/**
+ * Create a set of global variables to avoid the pattern below:
+ * <property>: ${(props): string => props.theme.mode === 'dark' ? <darkValue> : <lightValue> }
+ * in every single `styled-components` function.
+ *
+ * Instead, use `var(<variables>)` to automatically update values due to
+ * current theme. `light` is default.
+ *
+ * The naming rule of these variables is inspired from `BEM`: http://getbem.com/
+ * --<block>__<element>--<modifer>-<state?>
+ */
+
 import { css } from 'styled-components'
 
-import SFMonoMediumTTF from '@styles/fonts/SFMono/SFMono-Medium.ttf'
-import SFMonoMediumWOFF from '@styles/fonts/SFMono/SFMono-Medium.woff'
-import SFMonoMediumWOFF2 from '@styles/fonts/SFMono/SFMono-Medium.woff2'
-import SFMonoMediumItalicTTF from '@styles/fonts/SFMono/SFMono-MediumItalic.ttf'
-import SFMonoMediumItalicWOFF from '@styles/fonts/SFMono/SFMono-MediumItalic.woff'
-import SFMonoMediumItalicWOFF2 from '@styles/fonts/SFMono/SFMono-MediumItalic.woff2'
-import SFMonoRegularTTF from '@styles/fonts/SFMono/SFMono-Regular.ttf'
-import SFMonoRegularWOFF from '@styles/fonts/SFMono/SFMono-Regular.woff'
-import SFMonoRegularWOFF2 from '@styles/fonts/SFMono/SFMono-Regular.woff2'
-import SFMonoRegularItalicTTF from '@styles/fonts/SFMono/SFMono-RegularItalic.ttf'
-import SFMonoRegularItalicWOFF from '@styles/fonts/SFMono/SFMono-RegularItalic.woff'
-import SFMonoRegularItalicWOFF2 from '@styles/fonts/SFMono/SFMono-RegularItalic.woff2'
-import SFMonoSemiboldTTF from '@styles/fonts/SFMono/SFMono-Semibold.ttf'
-import SFMonoSemiboldWOFF from '@styles/fonts/SFMono/SFMono-Semibold.woff'
-import SFMonoSemiboldWOFF2 from '@styles/fonts/SFMono/SFMono-Semibold.woff2'
-import SFMonoSemiboldItalicTTF from '@styles/fonts/SFMono/SFMono-SemiboldItalic.ttf'
-import SFMonoSemiboldItalicWOFF from '@styles/fonts/SFMono/SFMono-SemiboldItalic.woff'
-import SFMonoSemiboldItalicWOFF2 from '@styles/fonts/SFMono/SFMono-SemiboldItalic.woff2'
+const global = css`
+  --body__text: ${(props): string =>
+    props.theme.mode === 'dark' ? '#020202' : '#fafafa'};
+  --body__background: ${(props): string =>
+    props.theme.mode === 'dark' ? '#202020' : '#e0e0e0'};
 
-export const monoFontFaces = css`
-  @font-face {
-    font-family: 'SF Mono';
-    src: url(${SFMonoRegularWOFF2}) format('woff2'),
-      url(${SFMonoRegularWOFF}) format('woff'),
-      url(${SFMonoRegularTTF}) format('truetype');
-    font-weight: normal;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: 'SF Mono';
-    src: url(${SFMonoRegularItalicWOFF2}) format('woff2'),
-      url(${SFMonoRegularItalicWOFF}) format('woff'),
-      url(${SFMonoRegularItalicTTF}) format('truetype');
-    font-weight: normal;
-    font-style: italic;
-  }
-  @font-face {
-    font-family: 'SF Mono';
-    src: url(${SFMonoMediumWOFF2}) format('woff2'),
-      url(${SFMonoMediumWOFF}) format('woff'),
-      url(${SFMonoMediumTTF}) format('truetype');
-    font-weight: 500;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: 'SF Mono';
-    src: url(${SFMonoMediumItalicWOFF2}) format('woff2'),
-      url(${SFMonoMediumItalicWOFF}) format('woff'),
-      url(${SFMonoMediumItalicTTF}) format('truetype');
-    font-weight: 500;
-    font-style: italic;
-  }
-  @font-face {
-    font-family: 'SF Mono';
-    src: url(${SFMonoSemiboldWOFF2}) format('woff2'),
-      url(${SFMonoSemiboldWOFF}) format('woff'),
-      url(${SFMonoSemiboldTTF}) format('truetype');
-    font-weight: 600;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: 'SF Mono';
-    src: url(${SFMonoSemiboldItalicWOFF2}) format('woff2'),
-      url(${SFMonoSemiboldItalicWOFF}) format('woff'),
-      url(${SFMonoSemiboldItalicTTF}) format('truetype');
-    font-weight: 600;
-    font-style: italic;
-  }
+  --terminal__text: ${(props): string =>
+    props.theme.mode === 'dark' ? '#020202' : '#fafafa'};
+  --terminal__background: ${(props): string =>
+    props.theme.mode === 'dark' ? '#e0e0e0' : '#202020'};
+
+  --body__boxshadow--focus-on: 0 0 1px rgba(0, 0, 0, 0.26),
+    0 0 5px rgba(0, 0, 0, 0.16), 0 8px 10px rgba(0, 0, 0, 0.06),
+    0 55px 65px rgba(0, 0, 0, 0.68);
+  --body__boxshadow--focus-off: 0 0 1px rgba(0, 0, 0, 0.26),
+    0 0 5px rgba(0, 0, 0, 0.16), 0 8px 10px rgba(0, 0, 0, 0.06),
+    0 55px 65px rgba(0, 0, 0, 0);
 `
 
-export default monoFontFaces
+export default global

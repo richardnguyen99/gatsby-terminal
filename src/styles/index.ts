@@ -1,4 +1,4 @@
-import { monoFontFaces } from './variables'
+import { monoFontFaces } from './fonts'
+import global from './variables'
 
-// eslint-disable-next-line import/prefer-default-export
-export { monoFontFaces }
+export { monoFontFaces, global }

@@ -1,9 +1,15 @@
 import { createGlobalStyle } from 'styled-components'
 
-import { monoFontFaces } from '@styles'
+import { monoFontFaces, global } from '@styles'
 
 const GlobalStyle = createGlobalStyle`
   /*! normalize.css v8.0.1 | MIT License | github.com/necolas/normalize.css */
+
+  :root {
+    ${global}
+  }
+
+  ${monoFontFaces}
 
   /* Document
     ========================================================================== */
@@ -12,8 +18,6 @@ const GlobalStyle = createGlobalStyle`
   * 1. Correct the line height in all browsers.
   * 2. Prevent adjustments of font size after orientation changes in iOS.
   */
-
-  ${monoFontFaces}
 
   html {
     line-height: 1.15; /* 1 */
@@ -34,7 +38,8 @@ const GlobalStyle = createGlobalStyle`
 
     overflow-x: hidden;
 
-    background: #e0e0e0;
+    background: var(--body__background);
+    color: var(--body__text);
   }
 
   /**
@@ -291,15 +296,6 @@ const GlobalStyle = createGlobalStyle`
 
   [type="search"] {
     outline-offset: -2px; /* 2 */
-  }
-
-  /**
-  * 1. Correct the inability to style clickable types in iOS and Safari.
-  * 2. Change font properties to 'inherit' in Safari.
-  */
-
-  ::-webkit-file-upload-button {
-    font: inherit; /* 2 */
   }
 
   /* Interactive

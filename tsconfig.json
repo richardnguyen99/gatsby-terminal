@@ -16,7 +16,11 @@
       "@components/*": ["components/*"],
       "@pages": ["pages"],
       "@styles": ["styles"],
-      "@styles/*": ["styles/*"]
+      "@styles/*": ["styles/*"],
+      "@hooks": ["hooks"],
+      "@hooks/*": ["hooks/*"],
+      "@context": ["context"],
+      "@context/*": ["context/*"],
     },
     "noEmit": true,
     "sourceMap": true,

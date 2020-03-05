@@ -45,7 +45,7 @@ const StyledBtnContainer = styled.div`
 const StyledTitle = styled.h1`
   margin: 0 auto;
 
-  color: #fafafa;
+  color: var(--terminal__text);
   line-height: 1;
   height: 12px;
 
@@ -63,8 +63,8 @@ const StyledHeading = styled.div`
   margin: 0;
   padding: 0.375rem;
 
-  color: #fafafa;
-  background: #202020;
+  color: var(--terminal__text);
+  background: var(--terminal__background);
 
   width: auto;
 
@@ -82,8 +82,8 @@ const StyledConsole = styled.p`
   font-weight: normal;
   font-size: 14px;
 
-  color: #fafafa;
-  background: #202020;
+  color: var(--terminal__text);
+  background: var(--terminal__background);
 
   margin: 0;
 
@@ -122,7 +122,7 @@ const StyledConsoleLine = styled.p`
 
   top: 2px;
   right: 0;
-  background-color: #fafafa;
+  background-color: var(--terminal__text);
   vertical-align: top;
   width: 8px;
   height: 14px;
@@ -142,12 +142,10 @@ const StyledTerminal = styled.div`
 
   border-radius: 5px;
 
-  box-shadow: 0 0 1px rgba(0, 0, 0, 0.26), 0 0 5px rgba(0, 0, 0, 0.16),
-    0 8px 10px rgba(0, 0, 0, 0.06), 0 55px 65px rgba(0, 0, 0, 0.68);
+  box-shadow: var(--body__boxshadow--focus-on);
 
   &.active {
-    box-shadow: 0 0 1px rgba(0, 0, 0, 0.26), 0 0 5px rgba(0, 0, 0, 0.16),
-      0 8px 10px rgba(0, 0, 0, 0.06), 0 55px 65px rgba(0, 0, 0, 0);
+    box-shadow: var(--body__boxshadow--focus-off);
   }
 `
 
