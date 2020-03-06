@@ -83,7 +83,7 @@ const StyledItem = styled.li`
 `
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const StyledClickableItem: React.FC<{ [a: string]: any }> = ({
+export const StyledClickableItem: React.FC<{ [a: string]: any }> = ({
   children,
   ...rest
 }) => {
@@ -180,7 +180,7 @@ const Header: React.FC = () => {
           <Icon icon={Gear} />
           <p>Config</p>
         </StyledClickableItem>
-        <StyledClickableItem>
+        <StyledClickableItem id="clock">
           <Icon icon={Clock} />
           <p>{date.toLocaleTimeString()}</p>
         </StyledClickableItem>

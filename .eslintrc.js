@@ -4,26 +4,23 @@ module.exports = {
     browser: true,
     node: true,
     es6: true,
+    'jest/globals': true,
   },
-  plugins: ['@typescript-eslint', 'react-hooks', 'prettier'],
+  plugins: ['@typescript-eslint', 'react-hooks', 'prettier', 'jest'],
   extends: [
     'airbnb',
     'plugin:@typescript-eslint/recommended',
     'plugin:import/typescript',
     'plugin:prettier/recommended',
     'prettier/@typescript-eslint',
+    'plugin:jest/recommended',
   ],
   settings: {
     'import/extensions': ['.js', '.jsx', '.ts', '.tsx'],
     'import/resolver': {
-      'node': {
-        'extensions': [
-          '.js',
-          '.jsx',
-          '.ts',
-          '.tsx'
-        ]
-      }
+      node: {
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      },
     },
     react: {
       version: 'detect',
@@ -94,5 +91,14 @@ module.exports = {
         semi: false,
       },
     ],
+    /**
+     * @description rules of eslint-plugin-jest
+     * See at: https://github.com/jest-community/eslint-plugin-jest
+     */
+    'jest/no-disabled-tests': 'warn',
+    'jest/no-focused-tests': 'error',
+    'jest/no-identical-title': 'error',
+    'jest/prefer-to-have-length': 'warn',
+    'jest/valid-expect': 'error',
   },
 }

@@ -8,7 +8,7 @@
     "charset": "utf8",
     "lib": ["dom", "esnext"],
     "typeRoots": ["./node_modules/@types", "./src/@types"],
-    "types": ["styled-components", "react", "react-dom", "node"],
+    "types": ["styled-components", "react", "react-dom", "node", "jest"],
     "baseUrl": "src",
     "paths": {
       "@/*": ["*"],

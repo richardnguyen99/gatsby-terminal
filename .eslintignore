@@ -9,3 +9,8 @@ src/graphql-types.ts
 **/.eslintrc.js
 
 src/graphql-types-gitignore.ts
+
+# Ignore all jest files and directories
+jest*.js
+loadershim.js
+__mocks__/
