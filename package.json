@@ -49,8 +49,10 @@
     "eslint-plugin-react-hooks": "^2.3.0",
     "husky": "^4.2.3",
     "identity-obj-proxy": "^3.0.0",
+    "istanbul": "^0.4.5",
     "jest": "^25.1.0",
     "jest-enzyme": "^7.1.2",
+    "jest-styled-components": "^7.0.0",
     "lint-staged": "^10.0.7",
     "prettier": "^1.19.1",
     "react-test-renderer": "^16.13.0",
@@ -76,7 +78,8 @@
     "serve": "gatsby serve",
     "clean": "gatsby clean",
     "deploy": "gatsby build --prefix-paths && gh-pages -d public -r https://$GH_TOKEN@github.com/richardnguyen99/portfolios.git",
-    "test": "jest"
+    "test": "jest",
+    "test:coverage": "jest --coverage"
   },
   "repository": {
     "type": "git",

@@ -1,6 +1,19 @@
 process.env.TZ = 'GMT'
 
 module.exports = {
+  collectCoverage: true,
+  collectCoverageFrom: [`**/*.{ts|tsx}`, `!**/node_modules/**`, `!**/coverage/**`, `!**/*.js`],
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+  },
+  snapshotSerializers: [
+    "enzyme-to-json/serializer"
+  ],
   transform: {
     "^.+\\.[jt]sx?$": "<rootDir>/jest-preprocess.js",
   },

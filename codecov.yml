@@ -2,6 +2,7 @@ codecov:
   bot: "codecov-io"
   ci:
     - "travis.org"
+  token: $CODECOV_TOKEN
 
 coverage:
   range: 80..100

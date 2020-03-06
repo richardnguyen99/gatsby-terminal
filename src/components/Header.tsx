@@ -20,7 +20,7 @@ const StyledNavbar = styled.nav`
   padding: 1rem;
 `
 
-const StyledControllGroup = styled.ul`
+export const StyledControllGroup = styled.ul`
   /* Use flex utilities to control alignments */
   display: flex;
 
@@ -87,6 +87,7 @@ export const StyledClickableItem: React.FC<{ [a: string]: any }> = ({
   children,
   ...rest
 }) => {
+  const { as } = rest
   const ref = useRef<HTMLLIElement>(null)
   const [click, setClick] = useState(false)
 
@@ -114,6 +115,7 @@ export const StyledClickableItem: React.FC<{ [a: string]: any }> = ({
 
   return (
     <StyledItem
+      as={as}
       ref={ref}
       className={click ? 'active' : ''}
       onClick={handleClick}
@@ -160,7 +162,7 @@ const Header: React.FC = () => {
 
   return (
     <StyledNavbar>
-      <StyledControlBrandGroup>
+      <StyledControlBrandGroup id="brand">
         <StyledClickableItem
           as="a"
           href="https://github.com/richardnguyen99/portfolios"
@@ -169,14 +171,14 @@ const Header: React.FC = () => {
           <p>PortfoliOS</p>
         </StyledClickableItem>
       </StyledControlBrandGroup>
-      <StyledControllGroup style={{ flexShrink: 0 }}>
+      <StyledControllGroup id="date" style={{ flexShrink: 0 }}>
         <StyledClickableItem>
           <Icon icon={Calendar} />
           <p>{convertDate(date)}</p>
         </StyledClickableItem>
       </StyledControllGroup>
-      <StyledControlConfigGroup>
-        <StyledClickableItem style={{ marginRight: '1rem' }}>
+      <StyledControlConfigGroup id="util">
+        <StyledClickableItem id="config" style={{ marginRight: '1rem' }}>
           <Icon icon={Gear} />
           <p>Config</p>
         </StyledClickableItem>
