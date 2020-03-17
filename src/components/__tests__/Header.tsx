@@ -4,7 +4,7 @@ import Octicon, { Octoface } from '@primer/octicons-react'
 import { mount, shallow } from 'enzyme'
 import renderer from 'react-test-renderer'
 
-import Header, { StyledControllGroup } from '../header'
+import Header, { StyledControllGroup } from '../Header'
 
 describe('<Header /> component', () => {
   // eslint-disable-next-line jest/expect-expect

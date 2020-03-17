@@ -1,5 +1,9 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
-import styled, { keyframes } from 'styled-components'
+import styled, {
+  keyframes,
+  css,
+  FlattenSimpleInterpolation,
+} from 'styled-components'
 
 const blink = keyframes`
   0% { opacity: 1.0; }
@@ -116,20 +120,36 @@ const StyledConsole = styled.p`
   }
 `
 
-const StyledConsoleLine = styled.p`
-  display: inline-block;
-  position: relative;
+const StyledInput = styled.input`
+  position: absolute;
+  z-index: -1;
 
-  top: 2px;
-  right: 0;
-  background-color: var(--terminal__text);
-  vertical-align: top;
-  width: 8px;
-  height: 14px;
+  font-family: 'SF Mono', monospace;
+  font-weight: bold;
 
-  margin: 0;
+  background: var(--terminal__background);
+  color: var(--terminal__text);
 
-  animation: ${blink} 1s step-end infinite;
+  border: none;
+  outline: none;
+
+  padding-left: 0.5rem;
+`
+
+const StyledPrompt = styled.span`
+  font-family: 'SF Mono', monospace;
+  font-weight: bold;
+
+  background: var(--terminal__background);
+  color: var(--terminal__text);
+
+  padding-right: 0.5rem;
+`
+
+const StyledCommandLine = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
 `
 
 const StyledTerminal = styled.div`
@@ -149,6 +169,55 @@ const StyledTerminal = styled.div`
   }
 `
 
+const StyledCaret = styled.span<{ blinked?: boolean }>`
+  color: var(--terminal__text);
+
+  ${(props): FlattenSimpleInterpolation =>
+    props.blinked
+      ? css`
+          background: var(--terminal__background);
+          color: var(--terminal__background);
+
+          #char {
+            background: var(--terminal__background);
+            color: var(--terminal__text);
+          }
+        `
+      : css`
+          background: var(--terminal__text);
+
+          #char {
+            background: var(--terminal__text);
+            color: var(--terminal__background);
+          }
+        `}
+`
+
+const Caret: React.FC = ({ children }) => {
+  const [blinked, setBlinked] = useState(false)
+
+  const caretWithChar =
+    typeof children === 'undefined' ? (
+      'C'
+    ) : (
+      <StyledCaret id="char" blinked={blinked}>
+        {children}
+      </StyledCaret>
+    )
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBlinked(!blinked)
+    }, 550)
+
+    return (): void => {
+      clearInterval(interval)
+    }
+  })
+
+  return <StyledCaret blinked={blinked}>{caretWithChar}</StyledCaret>
+}
+
 const Terminal: React.FC = () => {
   const [state, setState] = useState({
     isDragging: false,
@@ -157,11 +226,27 @@ const Terminal: React.FC = () => {
   })
 
   const [click, setClick] = useState(false)
-  const [text, setText] = useState('portfoliOS@~ root$ ')
-  const [command, setCommand] = useState('')
+  const [text, setText] = useState('')
+  const [prompt, setPrompt] = useState('portfoliOS@~ root$ ')
+  const [commandString, setCommandString] = useState('')
+  const [position, setPosition] = useState(0)
 
+  const inputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const focusRef = useRef<HTMLDivElement>(null)
+
+  const keyArrowEvents = ['keyup', 'keydown', 'keypress']
+
+  const unregisterableKeys = [
+    'Enter',
+    'Backspace',
+    'Control',
+    'Shift',
+    'Command',
+    'Meta',
+    'Alt',
+    'Escape',
+  ]
 
   const handleScrolling = (): void => {
     if (scrollRef.current) {
@@ -189,55 +274,55 @@ const Terminal: React.FC = () => {
     }
   }
 
-  const unregisterableKeys = [
-    'Enter',
-    'Backspace',
-    'Control',
-    'Shift',
-    'Command',
-    'Meta',
-    'Alt',
-    'Escape',
-  ]
+  const renderCaret = (): Array<string | JSX.Element> => {
+    const commandStringCaret: Array<string | JSX.Element> = commandString.split(
+      ''
+    )
+
+    commandStringCaret.splice(
+      position,
+      1,
+      <Caret>{commandString[position]}</Caret>
+    )
+
+    return commandStringCaret
+  }
+
+  const handleSelect = (evt: React.ChangeEvent<HTMLInputElement>): void => {
+    // eslint-disable-next-line no-param-reassign
+    evt.target.selectionStart = evt.target.selectionEnd
+  }
+
+  const handleInputChange = (
+    evt: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    setCommandString(evt.target.value)
+    setPosition(Number(inputRef.current?.selectionStart))
+  }
 
   const handleKeyPress = (e: KeyboardEvent): void => {
-    e.preventDefault()
-
     if (e.key === 'Enter') {
-      const parsedCommand = command.split(' ')
+      const parsedCommand = commandString.split(' ')
 
       if (parsedCommand[0] === 'clear') {
-        setText(`portfoliOS@~ root$ `)
-      } else if (parsedCommand[0] === 'help') {
-        setText(
-          `${text}\n${parsedCommand[0]}: Command not found\nportfoliOS@~ root$ `
-        )
+        setText(``)
       } else if (parsedCommand[0] === 'echo') {
-        setText(
-          `${text}\n${parsedCommand.slice(1).join(' ')}\nportfoliOS@~ root$ `
-        )
+        setText(`${text}\n${parsedCommand.slice(1).join(' ')}\n`)
       } else if (parsedCommand[0] === 'sysinfo') {
         if (parsedCommand[1] === '--author' || parsedCommand[1] === '-a') {
-          setText(`${text}\nRichard Nguyen\nportfoliOS@~ root$ `)
+          setText(`${text}\n${prompt} ${commandString}\nRichard Nguyen\n`)
         } else {
           setText(
-            `${text}\nAuthor: Richard Nguyen\nLanguage: Typescript\nFramework: Gatsby, Styled-components\nRepository: https//github.com/richardnguyen99/portfolios\nportfoliOS@~ root$ `
+            `${text}\n${prompt} ${commandString}\nAuthor: Richard Nguyen\nLanguage: Typescript\nFramework: Gatsby, Styled-components\nRepository: https//github.com/richardnguyen99/portfolios\n`
           )
         }
       } else {
         setText(
-          `${text}\n${parsedCommand[0]}: Command not found\nportfoliOS@~ root$ `
+          `${text}\n${prompt} ${commandString}\n${parsedCommand[0]}: Command not found\n`
         )
       }
-      setCommand('')
-    } else if (e.key === 'Backspace') {
-      if (command !== '') {
-        setText(text.substring(0, text.length - 1))
-        setCommand(command.substring(0, command.length - 1))
-      }
-    } else if (!unregisterableKeys.includes(e.key)) {
-      setText(text + e.key)
-      setCommand(command + e.key)
+      setCommandString('')
+      setPosition(0)
     }
   }
 
@@ -281,10 +366,26 @@ const Terminal: React.FC = () => {
   }, [onMouseMove, onMouseUp])
 
   useEffect(() => {
-    document.addEventListener('keydown', handleKeyPress, false)
+    const interval = setInterval(() => inputRef.current?.focus(), 500)
+
+    keyArrowEvents.map(evt =>
+      document.addEventListener(evt, () => {
+        setPosition(Number(inputRef.current?.selectionStart))
+      })
+    )
+
+    document.addEventListener('keypress', handleKeyPress)
 
     return (): void => {
-      document.removeEventListener('keydown', handleKeyPress, false)
+      clearInterval(interval)
+
+      keyArrowEvents.map(evt =>
+        document.removeEventListener(evt, () => {
+          setPosition(Number(inputRef.current?.selectionStart))
+        })
+      )
+
+      document.removeEventListener('keypress', handleKeyPress)
     }
   }, [handleKeyPress])
 
@@ -317,23 +418,24 @@ const Terminal: React.FC = () => {
         <StyledTitle>Children</StyledTitle>
       </StyledHeading>
       <StyledConsole>
-        {text !== '' && text.includes('\n') ? (
-          text.split('\n').map((i, key) => {
-            return (
-              <div>
-                {`${i}`}
-                {key === text.split('\n').length - 1 && click && (
-                  <StyledConsoleLine />
-                )}
-              </div>
-            )
-          })
-        ) : (
-          <div>
-            {`${text}`}
-            {click && <StyledConsoleLine />}
-          </div>
-        )}
+        {text !== '' &&
+          text.includes('\n') &&
+          text.split('\n').map(i => {
+            return <div>{`${i}`}</div>
+          })}
+        <StyledCommandLine>
+          <StyledPrompt>{prompt}</StyledPrompt>
+          {renderCaret()}
+          <StyledInput
+            ref={inputRef}
+            type="text"
+            autoFocus
+            onChange={handleInputChange}
+            onSelect={handleSelect}
+            value={commandString}
+          />
+        </StyledCommandLine>
+
         <div ref={scrollRef} />
       </StyledConsole>
     </StyledTerminal>
