@@ -6,9 +6,9 @@ import { ThemeProvider as ThemeRoot } from 'styled-components'
 
 import { useLocalStorage } from '@hooks'
 
-const ThemeContext = createContext({
+export const ThemeContext = createContext({
   theme: 'light',
-  toggle: (_: 'light' | 'dark') => {},
+  toggle: () => {},
 })
 
 const ThemeProvider: React.FC = ({ children }) => {
@@ -18,8 +18,12 @@ const ThemeProvider: React.FC = ({ children }) => {
     mode: theme,
   }
 
+  const toggle = (): void => {
+    setTheme(theme === 'dark' ? 'light' : 'dark')
+  }
+
   return (
-    <ThemeContext.Provider value={{ theme, toggle: setTheme }}>
+    <ThemeContext.Provider value={{ theme, toggle }}>
       <ThemeRoot theme={themeObj}>{children}</ThemeRoot>
     </ThemeContext.Provider>
   )

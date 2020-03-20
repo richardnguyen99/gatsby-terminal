@@ -18,6 +18,17 @@ const global = css`
   --body__background: ${(props): string =>
     props.theme.mode === 'dark' ? '#202020' : '#e0e0e0'};
 
+  --header__text--focus-off: ${(props): string =>
+    props.theme.mode === 'dark' ? '#020202' : '#fafafa'};
+  --header__text--focus-on: ${(props): string =>
+    props.theme.mode === 'dark' ? '#fafafa' : '#020202'};
+  --header__background--focus-off: ${(props): string =>
+    props.theme.mode === 'dark' ? '#e0e0e0' : '#202020'};
+  --header__background--focus-on: ${(props): string =>
+    props.theme.mode === 'dark' ? '#454647' : '#e0e0e0'};
+  --header__background--onHover: ${(props): string =>
+    props.theme.mode === 'dark' ? '#d4d5d6' : '#e0e0e0'};
+
   --terminal__text: ${(props): string =>
     props.theme.mode === 'dark' ? '#020202' : '#fafafa'};
   --terminal__background: ${(props): string =>
@@ -28,7 +39,7 @@ const global = css`
     0 55px 65px rgba(0, 0, 0, 0.68);
   --body__boxshadow--focus-off: 0 0 1px rgba(0, 0, 0, 0.26),
     0 0 5px rgba(0, 0, 0, 0.16), 0 8px 10px rgba(0, 0, 0, 0.06),
-    0 55px 65px rgba(0, 0, 0, 0);
+    0 55px 65px rgba(0, 0, 0, 0.28);
 `
 
 export default global

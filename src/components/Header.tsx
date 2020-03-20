@@ -1,7 +1,9 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useContext } from 'react'
 import styled from 'styled-components'
 import Icon, { Octoface, Calendar, Gear, Clock } from '@primer/octicons-react'
+
+import { ThemeContext } from '@context/ThemeContext'
 
 interface HeaderProps {
   siteTitle?: string
@@ -52,8 +54,8 @@ const StyledItem = styled.li`
   border-radius: 4px;
   border: 1px solid #060606;
 
-  color: #fafafa;
-  background: #202020;
+  color: var(--header__text--focus-off);
+  background: var(--header__background--focus-off);
 
   padding: 0.5rem 1rem;
 
@@ -65,8 +67,8 @@ const StyledItem = styled.li`
   transition: all 100ms ease-in-out;
 
   &.active {
-    background: #e6e6e6;
-    color: #020202;
+    background: var(--header__background--focus-on);
+    color: var(--header__text--focus-on);
     border: none;
   }
 
@@ -80,6 +82,73 @@ const StyledItem = styled.li`
       cursor: default;
     }
   }
+`
+
+const StyledNav = styled.ul`
+  display: flex;
+  flex-direction: column;
+
+  list-style: none;
+  height: 100%;
+
+  padding: 0rem;
+`
+
+const StyledNavItem = styled(StyledItem)`
+  border: none;
+  border-radius: 0px;
+  box-shadow: none;
+
+  padding: 0.5rem 1rem;
+
+  &#source {
+    border-top-right-radius: 4px;
+    border-top-left-radius: 4px;
+  }
+
+  &#info {
+    border-bottom-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+  }
+
+  &:hover {
+    background: var(--header__background--onHover);
+  }
+
+  a {
+    text-decoration: none;
+
+    &:visited {
+      color: var(--header__text--focus-off);
+    }
+  }
+`
+
+interface StyledCollapseMenuProps {
+  show: boolean
+}
+
+const StyledCollapseMenu = styled.div<StyledCollapseMenuProps>`
+  flex-basis: 100%;
+  flex-grow: 1;
+  align-items: center;
+  @media screen and (min-width: 992px) {
+    display: inline-table;
+    position: absolute;
+    top: 60%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    margin: 1rem;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: var(--body__boxshadow--focus-off);
+    background: var(--header__background--focus-off);
+    color: var(--header__background--focus-on);
+
+    opacity: ${(props): number => (!props.show ? 0 : 1)};
+  }
+  display: ${(props): string => (!props.show ? `none` : ``)};
 `
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -126,6 +195,59 @@ export const StyledClickableItem: React.FC<{ [a: string]: any }> = ({
   )
 }
 
+const ControlBandGroup: React.FC = () => {
+  const ref = useRef<HTMLUListElement>(null)
+
+  const [show, setShow] = useState(false)
+
+  const themeContext = useContext(ThemeContext)
+
+  const handleClick = (
+    evt: React.MouseEvent<HTMLLIElement, MouseEvent>
+  ): void => {
+    evt.preventDefault()
+    setShow(!show)
+  }
+
+  const handleClickOutSide = (e: MouseEvent): void => {
+    // https://stackoverflow.com/questions/43842057/detect-if-click-was-inside-react-component-or-not-in-typescript
+    if (show && ref.current && !ref.current.contains(e.target as Node)) {
+      setShow(false)
+    }
+  }
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutSide)
+
+    return (): void => {
+      document.removeEventListener('mousedown', handleClickOutSide)
+    }
+  }, [handleClickOutSide])
+
+  return (
+    <StyledControlBrandGroup id="brand" ref={ref}>
+      <StyledClickableItem onClick={handleClick}>
+        <Icon icon={Octoface} />
+        <p>PortfoliOS</p>
+      </StyledClickableItem>
+      <StyledCollapseMenu show={show}>
+        <StyledNav>
+          <StyledNavItem id="source">
+            <a href="https://github.com/richardnguyen99/portfolios">
+              Source (Github)
+            </a>
+          </StyledNavItem>
+          <StyledNavItem onClick={(): void => themeContext.toggle()}>
+            Switch to&nbsp;
+            {themeContext.theme === 'dark' ? 'light' : 'dark'}
+          </StyledNavItem>
+          <StyledNavItem id="info">Config</StyledNavItem>
+        </StyledNav>
+      </StyledCollapseMenu>
+    </StyledControlBrandGroup>
+  )
+}
+
 const Header: React.FC = () => {
   const [date, setDate] = useState(new Date())
 
@@ -162,15 +284,7 @@ const Header: React.FC = () => {
 
   return (
     <StyledNavbar>
-      <StyledControlBrandGroup id="brand">
-        <StyledClickableItem
-          as="a"
-          href="https://github.com/richardnguyen99/portfolios"
-        >
-          <Icon icon={Octoface} />
-          <p>PortfoliOS</p>
-        </StyledClickableItem>
-      </StyledControlBrandGroup>
+      <ControlBandGroup />
       <StyledControllGroup id="date" style={{ flexShrink: 0 }}>
         <StyledClickableItem>
           <Icon icon={Calendar} />

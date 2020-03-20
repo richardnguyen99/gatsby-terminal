@@ -121,7 +121,6 @@ const StyledConsole = styled.p`
 `
 
 const StyledInput = styled.input`
-  position: absolute;
   z-index: -1;
 
   font-family: 'SF Mono', monospace;
@@ -156,6 +155,7 @@ const StyledTerminal = styled.div`
   display: block;
 
   position: absolute;
+  z-index: -1;
 
   width: 640px;
   height: 280px;
@@ -236,17 +236,6 @@ const Terminal: React.FC = () => {
   const focusRef = useRef<HTMLDivElement>(null)
 
   const keyArrowEvents = ['keyup', 'keydown', 'keypress']
-
-  const unregisterableKeys = [
-    'Enter',
-    'Backspace',
-    'Control',
-    'Shift',
-    'Command',
-    'Meta',
-    'Alt',
-    'Escape',
-  ]
 
   const handleScrolling = (): void => {
     if (scrollRef.current) {

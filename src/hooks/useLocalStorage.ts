@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/rules-of-hooks */
+// ESLint won't let me survive without this :(
 
 import { Dispatch, SetStateAction, useState, useEffect, useMemo } from 'react'
 
