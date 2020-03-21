@@ -9,9 +9,10 @@ git:
 install:
   - npm install -g codecov
 script:
+  - npm run test --coverage
   - yarn build --prefix-paths
 after_success:
-  - codecov
+  - codecov -f coverage/*.json
 deploy:
   provider: pages
   skip_cleanup: true

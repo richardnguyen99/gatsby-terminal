@@ -132,7 +132,8 @@ const StyledCollapseMenu = styled.div<StyledCollapseMenuProps>`
   flex-basis: 100%;
   flex-grow: 1;
   align-items: center;
-  @media screen and (min-width: 992px) {
+
+  @media (min-width: 992px) {
     display: inline-table;
     position: absolute;
     top: 60%;
@@ -195,17 +196,14 @@ export const StyledClickableItem: React.FC<{ [a: string]: any }> = ({
   )
 }
 
-const ControlBandGroup: React.FC = () => {
+export const ControlBandGroup: React.FC<{ id: string }> = ({ id }) => {
   const ref = useRef<HTMLUListElement>(null)
 
   const [show, setShow] = useState(false)
 
   const themeContext = useContext(ThemeContext)
 
-  const handleClick = (
-    evt: React.MouseEvent<HTMLLIElement, MouseEvent>
-  ): void => {
-    evt.preventDefault()
+  const handleClick = (): void => {
     setShow(!show)
   }
 
@@ -225,12 +223,12 @@ const ControlBandGroup: React.FC = () => {
   }, [handleClickOutSide])
 
   return (
-    <StyledControlBrandGroup id="brand" ref={ref}>
-      <StyledClickableItem onClick={handleClick}>
+    <StyledControlBrandGroup id={id} ref={ref} onClick={handleClick}>
+      <StyledClickableItem>
         <Icon icon={Octoface} />
         <p>PortfoliOS</p>
       </StyledClickableItem>
-      <StyledCollapseMenu show={show}>
+      <StyledCollapseMenu id="dropdown" show={show}>
         <StyledNav>
           <StyledNavItem id="source">
             <a href="https://github.com/richardnguyen99/portfolios">
@@ -284,7 +282,7 @@ const Header: React.FC = () => {
 
   return (
     <StyledNavbar>
-      <ControlBandGroup />
+      <ControlBandGroup id="brand" />
       <StyledControllGroup id="date" style={{ flexShrink: 0 }}>
         <StyledClickableItem>
           <Icon icon={Calendar} />

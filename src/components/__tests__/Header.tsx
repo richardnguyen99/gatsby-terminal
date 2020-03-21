@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/ban-ts-ignore */
 /* eslint-disable import/no-extraneous-dependencies */
 import React from 'react'
 import Octicon, { Octoface } from '@primer/octicons-react'
 import { mount, shallow } from 'enzyme'
 import renderer from 'react-test-renderer'
 
-import Header, { StyledControllGroup } from '../Header'
+import Header, { StyledControllGroup, ControlBandGroup } from '../Header'
 
 describe('<Header /> component', () => {
   // eslint-disable-next-line jest/expect-expect
@@ -28,16 +29,17 @@ describe('<Header /> component', () => {
     })
     describe('id="brand"', () => {
       it('has this set of styles', () => {
-        const wrapper = shallow(<Header />)
+        const wrapper = mount(<Header />)
         const component = wrapper.find('#brand')
 
         expect(component).toHaveStyleRule('flex', '1')
       })
+
       it('has only one child', () => {
         const wrapper = mount(<Header />)
-        const component = wrapper.find('#brand')
+        const component = wrapper.find('ul#brand')
 
-        expect(component.first()).toHaveLength(1)
+        expect(component.props().children).toHaveLength(2)
       })
 
       it('has one Octoface icon', () => {
@@ -52,6 +54,18 @@ describe('<Header /> component', () => {
         const component = wrapper.find('#brand').first()
 
         expect(component.find('p').text()).toEqual('PortfoliOS')
+      })
+
+      it('shows dropdown menu after clicking', () => {
+        const wrapper = shallow(<ControlBandGroup id="brand" />)
+
+        wrapper.simulate('click')
+        expect(
+          wrapper
+            .find('#dropdown')
+            .first()
+            .prop('show')
+        ).toEqual(true)
       })
     })
   })

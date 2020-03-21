@@ -1,15 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
-import styled, {
-  keyframes,
-  css,
-  FlattenSimpleInterpolation,
-} from 'styled-components'
-
-const blink = keyframes`
-  0% { opacity: 1.0; }
-  50% { opacity: 0.0; }
-  100% { opacity: 1.0; }
-`
+import styled, { css, FlattenSimpleInterpolation } from 'styled-components'
 
 const StyledBtn = styled.button`
   border-radius: 50%;
@@ -227,7 +217,7 @@ const Terminal: React.FC = () => {
 
   const [click, setClick] = useState(false)
   const [text, setText] = useState('')
-  const [prompt, setPrompt] = useState('portfoliOS@~ root$ ')
+  const [prompt] = useState('portfoliOS@~ root$ ')
   const [commandString, setCommandString] = useState('')
   const [position, setPosition] = useState(0)
 
