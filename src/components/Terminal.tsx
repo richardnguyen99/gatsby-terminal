@@ -1,5 +1,13 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react'
+import React, {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  useContext,
+} from 'react'
 import styled, { css, FlattenSimpleInterpolation } from 'styled-components'
+
+import { DirContext } from '@context/DirContext'
 
 const StyledBtn = styled.button`
   border-radius: 50%;
@@ -209,6 +217,8 @@ const Caret: React.FC = ({ children }) => {
 }
 
 const Terminal: React.FC = () => {
+  const dirContext = useContext(DirContext)
+
   const [state, setState] = useState({
     isDragging: false,
     dX: 80,
@@ -217,7 +227,9 @@ const Terminal: React.FC = () => {
 
   const [click, setClick] = useState(false)
   const [text, setText] = useState('')
-  const [prompt] = useState('portfoliOS@~ root$ ')
+  const [prompt, setPrompt] = useState(
+    `portfoliOS@${dirContext.state.dir} root$ `
+  )
   const [commandString, setCommandString] = useState('')
   const [position, setPosition] = useState(0)
 
@@ -275,7 +287,7 @@ const Terminal: React.FC = () => {
   const handleInputChange = (
     evt: React.ChangeEvent<HTMLInputElement>
   ): void => {
-    setCommandString(evt.target.value)
+    setCommandString(evt.target.value === ' ' ? '&nbsp;' : evt.target.value)
     setPosition(Number(inputRef.current?.selectionStart))
   }
 
@@ -287,6 +299,20 @@ const Terminal: React.FC = () => {
         setText(``)
       } else if (parsedCommand[0] === 'echo') {
         setText(`${text}\n${parsedCommand.slice(1).join(' ')}\n`)
+      } else if (parsedCommand[0] === 'cd') {
+        if (!parsedCommand[1]) {
+          setText(
+            `${text}\n${prompt} ${commandString}\n/root/${
+              dirContext.state.dir === '~' ? '' : dirContext.state.dir
+            }\n`
+          )
+        } else {
+          dirContext.dispatch({
+            type: 'CHANGE_DIR',
+            payload: { dir: `${parsedCommand[1]}` },
+          })
+          setText(`${text}\n${prompt} ${commandString}\n`)
+        }
       } else if (parsedCommand[0] === 'sysinfo') {
         if (parsedCommand[1] === '--author' || parsedCommand[1] === '-a') {
           setText(`${text}\n${prompt} ${commandString}\nRichard Nguyen\n`)
@@ -369,6 +395,10 @@ const Terminal: React.FC = () => {
   }, [handleKeyPress])
 
   useEffect(handleScrolling, [text])
+
+  useEffect(() => {
+    setPrompt(`portfoliOS@${dirContext.state.dir} root$ `)
+  }, [dirContext.state])
 
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutSide)

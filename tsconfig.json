@@ -21,6 +21,7 @@
       "@hooks/*": ["hooks/*"],
       "@context": ["context"],
       "@context/*": ["context/*"],
+      "@utils": ["utils"],
     },
     "noEmit": true,
     "sourceMap": true,

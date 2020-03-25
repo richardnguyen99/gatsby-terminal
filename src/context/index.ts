@@ -1,4 +1,4 @@
 import ThemeProvider from './ThemeContext'
+import DirProvider from './DirContext'
 
-// eslint-disable-next-line import/prefer-default-export
-export { ThemeProvider }
+export { ThemeProvider, DirProvider }
