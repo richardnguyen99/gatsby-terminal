@@ -5,10 +5,6 @@ import Icon, { Octoface, Calendar, Gear, Clock } from '@primer/octicons-react'
 
 import { ThemeContext } from '@context/ThemeContext'
 
-interface HeaderProps {
-  siteTitle?: string
-}
-
 const StyledNavbar = styled.nav`
   /* Declare position of navbar */
   position: fixed;

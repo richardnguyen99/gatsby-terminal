@@ -4,9 +4,13 @@
 import { Dispatch, SetStateAction, useState, useEffect, useMemo } from 'react'
 
 /**
+ * Returns the value of the input key in localStorage. If there is not key found,
+ * return null
  *
- * @param storage
- * @param key
+ * @template TValue - Type of the value got from localStorage
+ * @param {Storage} storage
+ * @param {string} key
+ * @returns { TValue | null }
  */
 const getValue = <TValue>(storage: Storage, key: string): TValue | null => {
   try {
@@ -17,21 +21,32 @@ const getValue = <TValue>(storage: Storage, key: string): TValue | null => {
   }
 }
 /**
+ * Return value from localStorage, otherwise return initialValue
  *
- * @param storage
- * @param key
- * @param initialValue
+ * @template TValue
+ * @param { Storage } storage
+ * @param { string } key
+ * @param { Tvalue } initialValue
  */
 const saveValue = <TValue>(
   storage: Storage,
   key: string,
   initialValue: TValue
 ): TValue =>
+  // Make sure React will render properly.
   useMemo(() => {
     const value = getValue<TValue>(storage, key)
     return value !== null ? value : initialValue
   }, [key, storage, initialValue])
 
+/**
+ * Set key-value to localStorage.
+ *
+ * @template TValue
+ * @param { Storage } storage
+ * @param { string } key
+ * @param { TValue } value
+ */
 const setValue = async <TValue>(
   storage: Storage,
   key: string,
@@ -46,6 +61,14 @@ const setValue = async <TValue>(
     }
   })
 
+/**
+ * Handle localStorage setting events
+ *
+ * @template TValue
+ * @param { Storage } storage
+ * @param { string } key
+ * @param { TValue } value
+ */
 const handleSetLocalStorage = <TValue>(
   storage: Storage,
   key: string,
@@ -64,6 +87,14 @@ const handleSetLocalStorage = <TValue>(
   return error
 }
 
+/**
+ * Handle localStorage changing events.
+ * It will update the main function's state to the newest state.
+ * So the state will be always correct.
+ *
+ * @param { string } key
+ * @param { Dispatch<SetStateAction<TValue>> } setChange
+ */
 const handleChangeLocalStorage = <TValue>(
   key: string,
   setChange: Dispatch<SetStateAction<TValue>>

@@ -8,6 +8,7 @@ import React, {
 import styled, { css, FlattenSimpleInterpolation } from 'styled-components'
 
 import { DirContext } from '@context/DirContext'
+import { TreeDir } from '@/utils'
 
 const StyledBtn = styled.button`
   border-radius: 50%;
@@ -219,6 +220,13 @@ const Caret: React.FC = ({ children }) => {
 const Terminal: React.FC = () => {
   const dirContext = useContext(DirContext)
 
+  const dir = new TreeDir(dirContext.state.structure)
+  const currentDir = dirContext.state.currentDir.name
+    .split('/')
+    .filter(Boolean)
+    .slice(-1)
+    .toString()
+
   const [state, setState] = useState({
     isDragging: false,
     dX: 80,
@@ -228,7 +236,8 @@ const Terminal: React.FC = () => {
   const [click, setClick] = useState(false)
   const [text, setText] = useState('')
   const [prompt, setPrompt] = useState(
-    `portfoliOS@${dirContext.state.dir} root$ `
+    // Seperate directories by / and make sure it's always the last element.
+    `portfoliOS@${currentDir} root$ `
   )
   const [commandString, setCommandString] = useState('')
   const [position, setPosition] = useState(0)
@@ -299,19 +308,74 @@ const Terminal: React.FC = () => {
         setText(``)
       } else if (parsedCommand[0] === 'echo') {
         setText(`${text}\n${parsedCommand.slice(1).join(' ')}\n`)
+      } else if (parsedCommand[0] === 'mkdir') {
+        try {
+          dir.add(
+            {
+              name: parsedCommand[1],
+              children: [],
+            },
+            { name: currentDir }
+          )
+          dirContext.dispatch({
+            type: 'MAKE_DIR',
+            payload: {
+              ...dirContext.state,
+              structure: dir.root,
+            },
+          })
+          setText(`${text}\n${prompt} ${commandString}\n`)
+        } catch (error) {
+          setText(`${text}\n${prompt} ${commandString}\n${error}\n`)
+        }
       } else if (parsedCommand[0] === 'cd') {
         if (!parsedCommand[1]) {
           setText(
-            `${text}\n${prompt} ${commandString}\n/root/${
-              dirContext.state.dir === '~' ? '' : dirContext.state.dir
-            }\n`
+            `${text}\n${prompt} ${commandString}\n${dirContext.state.currentDir.name}\n`
           )
         } else {
-          dirContext.dispatch({
-            type: 'CHANGE_DIR',
-            payload: { dir: `${parsedCommand[1]}` },
-          })
-          setText(`${text}\n${prompt} ${commandString}\n`)
+          const node = dir.bfs({ name: currentDir })
+
+          if (node !== null) {
+            const children = node.children.map(({ name }) => name)
+
+            if (children.includes(parsedCommand[1])) {
+              dirContext.dispatch({
+                type: 'CHANGE_DIR',
+                payload: {
+                  ...dirContext.state,
+                  currentDir: {
+                    name: `${dirContext.state.currentDir.name}${parsedCommand[1]}/`,
+                  },
+                },
+              })
+              setText(`${text}\n${prompt} ${commandString}\n`)
+            } else if (parsedCommand[1] === '..') {
+              if (currentDir !== 'root') {
+                dirContext.dispatch({
+                  type: 'CHANGE_DIR',
+                  payload: {
+                    ...dirContext.state,
+                    currentDir: {
+                      name: dirContext.state.currentDir.name.replace(
+                        `${currentDir}/`,
+                        ''
+                      ),
+                    },
+                  },
+                })
+                setText(`${text}\n${prompt} ${commandString}\n`)
+              } else {
+                setText(
+                  `${text}\n${prompt} ${commandString}\nYou are in root. Cannot go back anymore.\n`
+                )
+              }
+            } else {
+              setText(
+                `${text}\n${prompt} ${commandString}\n${parsedCommand[1]} does not exist in ${currentDir}`
+              )
+            }
+          }
         }
       } else if (parsedCommand[0] === 'sysinfo') {
         if (parsedCommand[1] === '--author' || parsedCommand[1] === '-a') {
@@ -397,7 +461,7 @@ const Terminal: React.FC = () => {
   useEffect(handleScrolling, [text])
 
   useEffect(() => {
-    setPrompt(`portfoliOS@${dirContext.state.dir} root$ `)
+    setPrompt(`portfoliOS@${currentDir} root$ `)
   }, [dirContext.state])
 
   useEffect(() => {

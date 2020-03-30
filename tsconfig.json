@@ -22,6 +22,7 @@
       "@context": ["context"],
       "@context/*": ["context/*"],
       "@utils": ["utils"],
+      "@utils/*": ["utils/*"]
     },
     "noEmit": true,
     "sourceMap": true,

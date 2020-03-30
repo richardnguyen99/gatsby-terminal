@@ -1,26 +1,56 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import React, { createContext, useReducer } from 'react'
+import React, { createContext, useReducer, useEffect } from 'react'
 
+import { useLocalStorage } from '@hooks'
 import { createReducer } from '@utils'
+import { NodeData } from '@utils/treeDir'
 
-const initialState = {
-  dir: '~',
+const initialStructure: NodeData = {
+  name: 'root',
+  children: [],
 }
 
-const dirReducer = createReducer<typeof initialState>(initialState, {
-  CHANGE_DIR: (state, payload) => ({ ...state, dir: `${payload.dir}` }),
+const currentDir = { name: '/root/' }
+
+const initialState = {
+  structure: initialStructure,
+  currentDir,
+}
+
+type Payload = typeof initialState
+
+type State = {
+  type: string
+  payload: Payload
+}
+
+const dirReducer = createReducer<Payload>(initialState, {
+  CHANGE_DIR: (state, payload) => ({
+    ...state,
+    currentDir: payload.currentDir,
+  }),
+  MAKE_DIR: (state, payload) => ({
+    ...state,
+    structure: payload.structure,
+  }),
 })
 
 export const DirContext = createContext<{
-  state: typeof initialState
-  dispatch: React.Dispatch<{ type: string; payload: typeof initialState }>
+  state: Payload
+  dispatch: React.Dispatch<State>
 }>({
   state: initialState,
   dispatch: () => {},
 })
 
 const DirProvider: React.FC = ({ children }) => {
-  const [state, dispatch] = useReducer(dirReducer, initialState)
+  const [dir, setDir] = useLocalStorage('dir', initialState)
+  const [state, dispatch] = useReducer(dirReducer, dir)
+
+  // Update localStorage after dispatch or state changes.
+  useEffect(() => {
+    setDir({ ...state })
+  }, [state, dispatch])
 
   return (
     <DirContext.Provider value={{ state, dispatch }}>
