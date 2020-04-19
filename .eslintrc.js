@@ -80,6 +80,7 @@ module.exports = {
      * @description rules of eslint-plugin-react-hooks
      */
     'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/exhaustive-deps': 'error',
 
     /**
      * @description rules of eslint-plugin-prettier

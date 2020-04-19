@@ -4,6 +4,7 @@ import React, {
   useRef,
   useEffect,
   useContext,
+  useReducer,
 } from 'react'
 import styled, { css, FlattenSimpleInterpolation } from 'styled-components'
 
@@ -78,7 +79,6 @@ const StyledHeading = styled.div`
 `
 
 const StyledConsole = styled.p`
-  display: block;
   padding: 0.5rem;
 
   font-family: 'SF Mono', Monaco, Menlo, monospace;
@@ -90,13 +90,15 @@ const StyledConsole = styled.p`
 
   margin: 0;
 
-  height: 100%;
+  height: 92%;
 
   border-bottom-right-radius: 5px;
   border-bottom-left-radius: 5px;
 
   outline: none;
-  overflow-y: scroll;
+  overflow-y: hidden;
+  overflow-x: hidden;
+  word-break: break-word;
   overflow-wrap: break-word;
 
   &::-webkit-scrollbar {
@@ -156,9 +158,6 @@ const StyledTerminal = styled.div`
   position: absolute;
   z-index: -1;
 
-  width: 640px;
-  height: 280px;
-
   border-radius: 5px;
 
   box-shadow: var(--body__boxshadow--focus-on);
@@ -217,9 +216,22 @@ const Caret: React.FC = ({ children }) => {
   return <StyledCaret blinked={blinked}>{caretWithChar}</StyledCaret>
 }
 
-const Terminal: React.FC = () => {
+interface TerminalProps {
+  initial?: {
+    width?: number
+    height?: number
+    top?: number
+    left?: number
+  }
+}
+
+const Terminal: React.FC<TerminalProps> = ({ initial }) => {
   const dirContext = useContext(DirContext)
 
+  // The structure got from DirContext is from localStorage.
+  // But it's unable to set a class to localStorage, so an object
+  // is substituted.To use Tree methods like add, remove and search
+  // outside a class is arduous
   const dir = new TreeDir(dirContext.state.structure)
   const currentDir = dirContext.state.currentDir.name
     .split('/')
@@ -227,52 +239,104 @@ const Terminal: React.FC = () => {
     .slice(-1)
     .toString()
 
+  // Main state contains core values to manipulate the component's
+  // size and position.
   const [state, setState] = useState({
-    isDragging: false,
-    dX: 80,
-    dY: 80,
+    width: initial && initial.width ? initial.width : 860,
+    height: initial && initial.height ? initial.height : 480,
+    top: initial && initial.top ? initial.top : 20,
+    left: initial && initial.left ? initial.left : 20,
   })
 
-  const [click, setClick] = useState(false)
+  // Check if the mouse hits the edges or the corners of componnent.
+  const [hit, setHit] = useState({
+    top: false,
+    right: false,
+    bottom: false,
+    left: false,
+  })
+
+  // Store mouse position and modify its cursor style basing on
+  // hit state.
+  const [cursor, setCursor] = useState({
+    posX: 0,
+    posY: 0,
+    style: 'auto',
+  })
+
+  // Store state of click event to know when terminal is selected.
+  const [selected, setSelected] = useState(false)
+
+  // Contains state when clicking on edges and get values at that moment.
+  // If click while not on edges, clicked is null.
+  const [clicked, setClicked] = useState<{
+    x: number
+    y: number
+    top: number
+    left: number
+    boundingBox: DOMRect
+  } | null>(null)
+
+  // Text is used as a log. It will store everything clients type and format
+  // them so that it can be read easily. To clean this up, use `clear` command
+  // in the terminal will set it back to empty string.
   const [text, setText] = useState('')
+
+  // Display prompt. Can be changed based on the current dir.
   const [prompt, setPrompt] = useState(
     // Seperate directories by / and make sure it's always the last element.
     `portfoliOS@${currentDir} root$ `
   )
+
+  // Store client's input before hit enter. After hit Enter, terminal will
+  // check if it is a valid command and will process. This will be also set
+  // to empty string.
   const [commandString, setCommandString] = useState('')
+
+  // Store current position in client's input. Can be changed by using
+  // the arrow keys to move around.
   const [position, setPosition] = useState(0)
 
   const inputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
-  const focusRef = useRef<HTMLDivElement>(null)
+  const terminalRef = useRef<HTMLDivElement>(null)
+  const titleRef = useRef<HTMLDivElement>(null)
 
-  const keyArrowEvents = ['keyup', 'keydown', 'keypress']
+  // Force update component.
+  // https://stackoverflow.com/a/58606536/12915739
+  const forceUpdate = useReducer(() => ({}), {})[1] as () => void
 
+  // Make sure terminal always follow to the last command.
   const handleScrolling = (): void => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' })
     }
   }
 
+  // Handle when users click on the component.
   const handleClick = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>
   ): void => {
     e.preventDefault()
-    if (!click) {
-      setClick(true)
+    if (!selected) {
+      setSelected(true)
     }
   }
 
-  const handleClickOutSide = (e: MouseEvent): void => {
-    // https://stackoverflow.com/questions/43842057/detect-if-click-was-inside-react-component-or-not-in-typescript
-    if (
-      click &&
-      focusRef.current &&
-      !focusRef.current.contains(e.target as Node)
-    ) {
-      setClick(false)
-    }
-  }
+  // Handle when users click outside the component
+  const handleClickOutSide = useCallback(
+    (e: MouseEvent): void => {
+      // https://stackoverflow.com/questions/43842057/detect-if-click-was-inside-react-component-or-not-in-typescript
+      if (
+        selected &&
+        terminalRef.current &&
+        !terminalRef.current.contains(e.target as Node)
+      ) {
+        setSelected(false)
+      }
+    },
+    [selected]
+  )
 
   const renderCaret = (): Array<string | JSX.Element> => {
     const commandStringCaret: Array<string | JSX.Element> = commandString.split(
@@ -300,130 +364,220 @@ const Terminal: React.FC = () => {
     setPosition(Number(inputRef.current?.selectionStart))
   }
 
-  const handleKeyPress = (e: KeyboardEvent): void => {
-    if (e.key === 'Enter') {
-      const parsedCommand = commandString.split(' ')
+  const handleKeyPress = useCallback(
+    (e: KeyboardEvent): void => {
+      if (e.key === 'Enter') {
+        const parsedCommand = commandString.split(' ')
 
-      if (parsedCommand[0] === 'clear') {
-        setText(``)
-      } else if (parsedCommand[0] === 'echo') {
-        setText(`${text}\n${parsedCommand.slice(1).join(' ')}\n`)
-      } else if (parsedCommand[0] === 'mkdir') {
-        try {
-          dir.add(
-            {
-              name: parsedCommand[1],
-              children: [],
-            },
-            { name: currentDir }
-          )
-          dirContext.dispatch({
-            type: 'MAKE_DIR',
-            payload: {
-              ...dirContext.state,
-              structure: dir.root,
-            },
-          })
-          setText(`${text}\n${prompt} ${commandString}\n`)
-        } catch (error) {
-          setText(`${text}\n${prompt} ${commandString}\n${error}\n`)
-        }
-      } else if (parsedCommand[0] === 'cd') {
-        if (!parsedCommand[1]) {
-          setText(
-            `${text}\n${prompt} ${commandString}\n${dirContext.state.currentDir.name}\n`
-          )
-        } else {
-          const node = dir.bfs({ name: currentDir })
+        if (parsedCommand[0] === 'clear') {
+          setText(``)
+        } else if (parsedCommand[0] === 'echo') {
+          setText(`${text}\n${parsedCommand.slice(1).join(' ')}\n`)
+        } else if (parsedCommand[0] === 'mkdir') {
+          try {
+            dir.add(
+              {
+                name: parsedCommand[1],
+                children: [],
+              },
+              { name: currentDir }
+            )
+            dirContext.dispatch({
+              type: 'MAKE_DIR',
+              payload: {
+                ...dirContext.state,
+                structure: dir.root,
+              },
+            })
+            setText(`${text}\n${prompt} ${commandString}\n`)
+          } catch (error) {
+            setText(`${text}\n${prompt} ${commandString}\n${error}\n`)
+          }
+        } else if (parsedCommand[0] === 'cd') {
+          if (!parsedCommand[1]) {
+            setText(
+              `${text}\n${prompt} ${commandString}\n${dirContext.state.currentDir.name}\n`
+            )
+          } else {
+            const node = dir.bfs({ name: currentDir })
 
-          if (node !== null) {
-            const children = node.children.map(({ name }) => name)
+            if (node !== null) {
+              const children = node.children.map(({ name }) => name)
 
-            if (children.includes(parsedCommand[1])) {
-              dirContext.dispatch({
-                type: 'CHANGE_DIR',
-                payload: {
-                  ...dirContext.state,
-                  currentDir: {
-                    name: `${dirContext.state.currentDir.name}${parsedCommand[1]}/`,
-                  },
-                },
-              })
-              setText(`${text}\n${prompt} ${commandString}\n`)
-            } else if (parsedCommand[1] === '..') {
-              if (currentDir !== 'root') {
+              if (children.includes(parsedCommand[1])) {
                 dirContext.dispatch({
                   type: 'CHANGE_DIR',
                   payload: {
                     ...dirContext.state,
                     currentDir: {
-                      name: dirContext.state.currentDir.name.replace(
-                        `${currentDir}/`,
-                        ''
-                      ),
+                      name: `${dirContext.state.currentDir.name}${parsedCommand[1]}/`,
                     },
                   },
                 })
                 setText(`${text}\n${prompt} ${commandString}\n`)
+              } else if (parsedCommand[1] === '..') {
+                if (currentDir !== 'root') {
+                  dirContext.dispatch({
+                    type: 'CHANGE_DIR',
+                    payload: {
+                      ...dirContext.state,
+                      currentDir: {
+                        name: dirContext.state.currentDir.name.replace(
+                          `${currentDir}/`,
+                          ''
+                        ),
+                      },
+                    },
+                  })
+                  setText(`${text}\n${prompt} ${commandString}\n`)
+                } else {
+                  setText(
+                    `${text}\n${prompt} ${commandString}\nYou are in root. Cannot go back anymore.\n`
+                  )
+                }
               } else {
                 setText(
-                  `${text}\n${prompt} ${commandString}\nYou are in root. Cannot go back anymore.\n`
+                  `${text}\n${prompt} ${commandString}\n${parsedCommand[1]} does not exist in ${currentDir}`
                 )
               }
-            } else {
-              setText(
-                `${text}\n${prompt} ${commandString}\n${parsedCommand[1]} does not exist in ${currentDir}`
-              )
             }
           }
-        }
-      } else if (parsedCommand[0] === 'sysinfo') {
-        if (parsedCommand[1] === '--author' || parsedCommand[1] === '-a') {
-          setText(`${text}\n${prompt} ${commandString}\nRichard Nguyen\n`)
+        } else if (parsedCommand[0] === 'sysinfo') {
+          if (parsedCommand[1] === '--author' || parsedCommand[1] === '-a') {
+            setText(`${text}\n${prompt} ${commandString}\nRichard Nguyen\n`)
+          } else {
+            setText(
+              `${text}\n${prompt} ${commandString}\nAuthor: Richard Nguyen\nLanguage: Typescript\nFramework: Gatsby, Styled-components\nRepository: https//github.com/richardnguyen99/portfolios\n`
+            )
+          }
         } else {
           setText(
-            `${text}\n${prompt} ${commandString}\nAuthor: Richard Nguyen\nLanguage: Typescript\nFramework: Gatsby, Styled-components\nRepository: https//github.com/richardnguyen99/portfolios\n`
+            `${text}\n${prompt} ${commandString}\n${parsedCommand[0]}: Command not found\n`
           )
         }
-      } else {
-        setText(
-          `${text}\n${prompt} ${commandString}\n${parsedCommand[0]}: Command not found\n`
-        )
+        setCommandString('')
+        setPosition(0)
       }
-      setCommandString('')
-      setPosition(0)
+    },
+    [commandString, currentDir, dirContext, prompt, text, dir]
+  )
+
+  const updateCursor = useCallback(
+    (e: MouseEvent): void => {
+      const boundingBox = terminalRef.current?.getBoundingClientRect()
+
+      setCursor(prevState => ({
+        ...prevState,
+        posX: e.clientX,
+        posY: e.clientY,
+      }))
+
+      if (boundingBox) {
+        const hitTop = cursor.posY <= boundingBox.top + 10
+        const hitBottom = cursor.posY >= boundingBox.bottom - 10
+        const hitLeft = cursor.posX <= boundingBox.left + 10
+        const hitRight = cursor.posX >= boundingBox.right - 10
+
+        setCursor(prevState => ({
+          ...prevState,
+          style: 'auto',
+        }))
+
+        if (hitTop || hitBottom || hitLeft || hitRight) {
+          if (hitRight && hitTop) {
+            setCursor(prevState => ({
+              ...prevState,
+              style: 'ne-resize',
+            }))
+          } else if (hitRight && hitBottom) {
+            setCursor(prevState => ({
+              ...prevState,
+              style: 'se-resize',
+            }))
+          } else if (hitLeft && hitTop) {
+            setCursor(prevState => ({
+              ...prevState,
+              style: 'nw-resize',
+            }))
+          } else if (hitLeft && hitBottom) {
+            setCursor(prevState => ({
+              ...prevState,
+              style: 'sw-resize',
+            }))
+          } else if (hitTop || hitBottom) {
+            setCursor(prevState => ({
+              ...prevState,
+              style: 'ns-resize',
+            }))
+          } else if (hitLeft || hitRight) {
+            setCursor(prevState => ({
+              ...prevState,
+              style: 'ew-resize',
+            }))
+          }
+          e.stopPropagation()
+        } else {
+          const titleBoundingRect = titleRef.current?.getBoundingClientRect()
+
+          if (
+            titleBoundingRect &&
+            cursor.posX > titleBoundingRect.left &&
+            cursor.posY < titleBoundingRect.right &&
+            cursor.posY > titleBoundingRect.top &&
+            cursor.posY < titleBoundingRect.bottom
+          ) {
+            setCursor(prevState => ({
+              ...prevState,
+              style: 'move',
+            }))
+          }
+        }
+
+        setHit({
+          top: hitTop,
+          right: hitRight,
+          bottom: hitBottom,
+          left: hitLeft,
+        })
+      }
+    },
+    [cursor.posX, cursor.posY]
+  )
+
+  const onMouseMove = useCallback(
+    (e: MouseEvent): void => {
+      updateCursor(e)
+
+      if (clicked !== null) {
+        forceUpdate()
+      }
+    },
+    [clicked, updateCursor, forceUpdate]
+  )
+
+  const onMouseDown = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>
+  ): void => {
+    const boundingBox = terminalRef.current?.getBoundingClientRect()
+
+    if (boundingBox && terminalRef.current) {
+      setClicked({
+        x: e.clientX,
+        y: e.clientY,
+        boundingBox,
+        top: terminalRef.current.offsetTop,
+        left: terminalRef.current.offsetLeft,
+      })
     }
   }
 
-  const onMouseMove = useCallback(
-    e => {
-      if (state.isDragging) {
-        setState(prevState => ({
-          ...prevState,
-          dX: prevState.dX + e.movementX,
-          dY: prevState.dY + e.movementY,
-        }))
-      }
+  const onMouseUp = useCallback(
+    (e: MouseEvent): void => {
+      setClicked(null)
+      updateCursor(e)
     },
-    [state.isDragging]
+    [updateCursor]
   )
-
-  const onMouseDown = useCallback(() => {
-    setState(prevState => ({
-      ...prevState,
-      isDragging: true,
-    }))
-  }, [])
-
-  const onMouseUp = useCallback(() => {
-    if (state.isDragging) {
-      setState(prevState => ({
-        ...prevState,
-        isDragging: false,
-      }))
-    }
-  }, [state.isDragging])
-
   useEffect(() => {
     window.addEventListener('mousemove', onMouseMove)
     window.addEventListener('mouseup', onMouseUp)
@@ -435,6 +589,53 @@ const Terminal: React.FC = () => {
   }, [onMouseMove, onMouseUp])
 
   useEffect(() => {
+    if (clicked) {
+      const { top, right, bottom, left } = hit
+      const { boundingBox } = clicked
+
+      if (top || left || right || bottom) {
+        if (right)
+          setState(prevState => ({
+            ...prevState,
+            width: Math.max(cursor.posX - boundingBox.left, 280),
+          }))
+        if (bottom)
+          setState(prevState => ({
+            ...prevState,
+            height: Math.max(cursor.posY - boundingBox.top, 280),
+          }))
+        if (top) {
+          const currentHeight = boundingBox.bottom - cursor.posY
+          if (currentHeight > 280) {
+            setState(prevState => ({
+              ...prevState,
+              height: currentHeight,
+              top: clicked.top + cursor.posY - clicked.y,
+            }))
+          }
+        }
+        if (left) {
+          const currentWidth = boundingBox.right - cursor.posX
+          if (currentWidth > 280) {
+            setState(prevState => ({
+              ...prevState,
+              width: currentWidth,
+              left: clicked.left + cursor.posX - clicked.x,
+            }))
+          }
+        }
+      } else if (cursor.style === 'move') {
+        setState(prevState => ({
+          ...prevState,
+          top: clicked.top + cursor.posY - clicked.y,
+          left: clicked.left + cursor.posX - clicked.x,
+        }))
+      }
+    }
+  }, [clicked, cursor.posX, cursor.posY, cursor.style, hit])
+
+  useEffect(() => {
+    const keyArrowEvents = ['keyup', 'keydown', 'keypress']
     const interval = setInterval(() => inputRef.current?.focus(), 500)
 
     keyArrowEvents.map(evt =>
@@ -450,6 +651,7 @@ const Terminal: React.FC = () => {
 
       keyArrowEvents.map(evt =>
         document.removeEventListener(evt, () => {
+          // eslint-disable-next-line react-hooks/exhaustive-deps
           setPosition(Number(inputRef.current?.selectionStart))
         })
       )
@@ -462,7 +664,7 @@ const Terminal: React.FC = () => {
 
   useEffect(() => {
     setPrompt(`portfoliOS@${currentDir} root$ `)
-  }, [dirContext.state])
+  }, [dirContext.state, currentDir])
 
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutSide)
@@ -474,19 +676,23 @@ const Terminal: React.FC = () => {
 
   return (
     <StyledTerminal
-      ref={focusRef}
+      ref={terminalRef}
       onClick={handleClick}
-      className={!click ? 'active' : ''}
+      onMouseDown={onMouseDown}
+      className={!selected ? 'active' : ''}
       style={{
-        left: `${state.dX.toString().concat('px')}`,
-        top: `${state.dY.toString().concat('px')}`,
+        left: `${state.left}px`,
+        top: `${state.top}px`,
+        width: `${state.width}px`,
+        height: `${state.height}px`,
+        cursor: cursor.style,
       }}
     >
-      <StyledHeading onMouseDown={onMouseDown}>
+      <StyledHeading onMouseDown={onMouseDown} ref={titleRef}>
         <StyledBtnContainer>
-          <StyledBtnRed className={!click ? 'deactive' : ''} />
-          <StyledBtnYellow className={!click ? 'deactive' : ''} />
-          <StyledBtnGreen className={!click ? 'deactive' : ''} />
+          <StyledBtnRed className={!selected ? 'deactive' : ''} />
+          <StyledBtnYellow className={!selected ? 'deactive' : ''} />
+          <StyledBtnGreen className={!selected ? 'deactive' : ''} />
         </StyledBtnContainer>
         <StyledTitle>Children</StyledTitle>
       </StyledHeading>

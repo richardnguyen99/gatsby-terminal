@@ -1,5 +1,11 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import React, { useState, useEffect, useRef, useContext } from 'react'
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useContext,
+} from 'react'
 import styled from 'styled-components'
 import Icon, { Octoface, Calendar, Gear, Clock } from '@primer/octicons-react'
 
@@ -120,11 +126,7 @@ const StyledNavItem = styled(StyledItem)`
   }
 `
 
-interface StyledCollapseMenuProps {
-  show: boolean
-}
-
-const StyledCollapseMenu = styled.div<StyledCollapseMenuProps>`
+const StyledCollapseMenu = styled.div`
   flex-basis: 100%;
   flex-grow: 1;
   align-items: center;
@@ -142,10 +144,7 @@ const StyledCollapseMenu = styled.div<StyledCollapseMenuProps>`
     box-shadow: var(--body__boxshadow--focus-off);
     background: var(--header__background--focus-off);
     color: var(--header__background--focus-on);
-
-    opacity: ${(props): number => (!props.show ? 0 : 1)};
   }
-  display: ${(props): string => (!props.show ? `none` : ``)};
 `
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -164,12 +163,15 @@ export const StyledClickableItem: React.FC<{ [a: string]: any }> = ({
     setClick(!click)
   }
 
-  const handleClickOutSide = (e: MouseEvent): void => {
-    // https://stackoverflow.com/questions/43842057/detect-if-click-was-inside-react-component-or-not-in-typescript
-    if (click && ref.current && !ref.current.contains(e.target as Node)) {
-      setClick(false)
-    }
-  }
+  const handleClickOutSide = useCallback(
+    (e: MouseEvent): void => {
+      // https://stackoverflow.com/questions/43842057/detect-if-click-was-inside-react-component-or-not-in-typescript
+      if (click && ref.current && !ref.current.contains(e.target as Node)) {
+        setClick(false)
+      }
+    },
+    [click]
+  )
 
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutSide)
@@ -203,12 +205,15 @@ export const ControlBandGroup: React.FC<{ id: string }> = ({ id }) => {
     setShow(!show)
   }
 
-  const handleClickOutSide = (e: MouseEvent): void => {
-    // https://stackoverflow.com/questions/43842057/detect-if-click-was-inside-react-component-or-not-in-typescript
-    if (show && ref.current && !ref.current.contains(e.target as Node)) {
-      setShow(false)
-    }
-  }
+  const handleClickOutSide = useCallback(
+    (e: MouseEvent): void => {
+      // https://stackoverflow.com/questions/43842057/detect-if-click-was-inside-react-component-or-not-in-typescript
+      if (show && ref.current && !ref.current.contains(e.target as Node)) {
+        setShow(false)
+      }
+    },
+    [show]
+  )
 
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutSide)
@@ -224,20 +229,22 @@ export const ControlBandGroup: React.FC<{ id: string }> = ({ id }) => {
         <Icon icon={Octoface} />
         <p>PortfoliOS</p>
       </StyledClickableItem>
-      <StyledCollapseMenu id="dropdown" show={show}>
-        <StyledNav>
-          <StyledNavItem id="source">
-            <a href="https://github.com/richardnguyen99/portfolios">
-              Source (Github)
-            </a>
-          </StyledNavItem>
-          <StyledNavItem onClick={(): void => themeContext.toggle()}>
-            Switch to&nbsp;
-            {themeContext.theme === 'dark' ? 'light' : 'dark'}
-          </StyledNavItem>
-          <StyledNavItem id="info">Config</StyledNavItem>
-        </StyledNav>
-      </StyledCollapseMenu>
+      {show ? (
+        <StyledCollapseMenu id="dropdown">
+          <StyledNav>
+            <StyledNavItem id="source">
+              <a href="https://github.com/richardnguyen99/portfolios">
+                Source (Github)
+              </a>
+            </StyledNavItem>
+            <StyledNavItem onClick={(): void => themeContext.toggle()}>
+              Switch to&nbsp;
+              {themeContext.theme === 'dark' ? 'light' : 'dark'}
+            </StyledNavItem>
+            <StyledNavItem id="info">Config</StyledNavItem>
+          </StyledNav>
+        </StyledCollapseMenu>
+      ) : null}
     </StyledControlBrandGroup>
   )
 }

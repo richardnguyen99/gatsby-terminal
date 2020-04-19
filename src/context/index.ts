@@ -1,4 +1,5 @@
 import ThemeProvider from './ThemeContext'
 import DirProvider from './DirContext'
+import TabProvider from './TabContext'
 
-export { ThemeProvider, DirProvider }
+export { ThemeProvider, DirProvider, TabProvider }

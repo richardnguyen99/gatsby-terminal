@@ -60,12 +60,7 @@ describe('<Header /> component', () => {
         const wrapper = shallow(<ControlBandGroup id="brand" />)
 
         wrapper.simulate('click')
-        expect(
-          wrapper
-            .find('#dropdown')
-            .first()
-            .prop('show')
-        ).toEqual(true)
+        expect(wrapper.find('#dropdown')).toHaveLength(1)
       })
     })
   })
