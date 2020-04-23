@@ -7,12 +7,14 @@
 // You can delete this file if you're not using it
 import React from 'react'
 
-import { ThemeProvider, DirProvider } from '@context'
+import { ThemeProvider, DirProvider, TabProvider } from '@context'
 
 export const wrapRootElement = ({ element }) => {
   return (
     <ThemeProvider>
-      <DirProvider>{element}</DirProvider>
+      <DirProvider>
+        <TabProvider>{element}</TabProvider>
+      </DirProvider>
     </ThemeProvider>
   )
 }

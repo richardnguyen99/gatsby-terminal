@@ -10,6 +10,7 @@ const initialState = {
       id: 1,
       type: 'terminal',
       isFocused: true,
+      isMaximized: true,
     },
   ],
 }
@@ -25,13 +26,18 @@ const tabReducer = createReducer<Payload>(initialState, {
     ...state,
     tabs: payload.tabs,
   }),
+  ON_MAXIMIZED: (state, payload) => ({
+    ...state,
+    tabs: payload.tabs,
+  }),
   DELETED: (state, payload) => ({
+    ...state,
     number: payload.number,
     tabs: payload.tabs,
   }),
 })
 
-const TabContext = createContext<{
+export const TabContext = createContext<{
   state: Payload
   dispatch: React.Dispatch<State>
 }>({

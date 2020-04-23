@@ -9,6 +9,7 @@ import React, {
 import styled, { css, FlattenSimpleInterpolation } from 'styled-components'
 
 import { DirContext } from '@context/DirContext'
+import { TabContext } from '@context/TabContext'
 import { TreeDir } from '@/utils'
 
 const StyledBtn = styled.button`
@@ -88,8 +89,6 @@ const StyledConsole = styled.p`
   color: var(--terminal__text);
   background: var(--terminal__background);
 
-  margin: 0;
-
   height: 92%;
 
   border-bottom-right-radius: 5px;
@@ -152,11 +151,17 @@ const StyledCommandLine = styled.div`
   align-items: center;
 `
 
-const StyledTerminal = styled.div`
+interface StyledTerminalProps {
+  isMax: boolean
+}
+
+const StyledTerminal = styled.div<StyledTerminalProps>`
   display: block;
 
   position: absolute;
   z-index: -1;
+
+  background: var(--terminal__background);
 
   border-radius: 5px;
 
@@ -165,6 +170,8 @@ const StyledTerminal = styled.div`
   &.active {
     box-shadow: var(--body__boxshadow--focus-off);
   }
+
+  transition: all 200ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
 `
 
 const StyledCaret = styled.span<{ blinked?: boolean }>`
@@ -217,6 +224,8 @@ const Caret: React.FC = ({ children }) => {
 }
 
 interface TerminalProps {
+  id: number
+  isMax: boolean
   initial?: {
     width?: number
     height?: number
@@ -225,8 +234,9 @@ interface TerminalProps {
   }
 }
 
-const Terminal: React.FC<TerminalProps> = ({ initial }) => {
+const Terminal: React.FC<TerminalProps> = ({ id, initial, isMax }) => {
   const dirContext = useContext(DirContext)
+  const tabContext = useContext(TabContext)
 
   // The structure got from DirContext is from localStorage.
   // But it's unable to set a class to localStorage, so an object
@@ -324,19 +334,15 @@ const Terminal: React.FC<TerminalProps> = ({ initial }) => {
   }
 
   // Handle when users click outside the component
-  const handleClickOutSide = useCallback(
-    (e: MouseEvent): void => {
-      // https://stackoverflow.com/questions/43842057/detect-if-click-was-inside-react-component-or-not-in-typescript
-      if (
-        selected &&
-        terminalRef.current &&
-        !terminalRef.current.contains(e.target as Node)
-      ) {
-        setSelected(false)
-      }
-    },
-    [selected]
-  )
+  const handleClickOutSide = useCallback((e: MouseEvent): void => {
+    // https://stackoverflow.com/questions/43842057/detect-if-click-was-inside-react-component-or-not-in-typescript
+    if (
+      terminalRef.current &&
+      !terminalRef.current.contains(e.target as Node)
+    ) {
+      setSelected(false)
+    }
+  }, [])
 
   const renderCaret = (): Array<string | JSX.Element> => {
     const commandStringCaret: Array<string | JSX.Element> = commandString.split(
@@ -461,6 +467,38 @@ const Terminal: React.FC<TerminalProps> = ({ initial }) => {
     },
     [commandString, currentDir, dirContext, prompt, text, dir]
   )
+
+  const minimize = (): void => {
+    if (isMax) {
+      const updateTabs = tabContext.state.tabs.map(tab =>
+        tab.id === id ? { ...tab, isMaximized: false } : tab
+      )
+
+      tabContext.dispatch({
+        type: 'ON_MAXIMIZED',
+        payload: {
+          ...tabContext.state,
+          tabs: updateTabs,
+        },
+      })
+    }
+  }
+
+  const maximize = (): void => {
+    if (!isMax) {
+      const updateTabs = tabContext.state.tabs.map(tab =>
+        tab.id === id ? { ...tab, isMaximized: true } : tab
+      )
+
+      tabContext.dispatch({
+        type: 'ON_MAXIMIZED',
+        payload: {
+          ...tabContext.state,
+          tabs: updateTabs,
+        },
+      })
+    }
+  }
 
   const updateCursor = useCallback(
     (e: MouseEvent): void => {
@@ -624,7 +662,7 @@ const Terminal: React.FC<TerminalProps> = ({ initial }) => {
             }))
           }
         }
-      } else if (cursor.style === 'move') {
+      } else if (cursor.style === 'move' && !isMax) {
         setState(prevState => ({
           ...prevState,
           top: clicked.top + cursor.posY - clicked.y,
@@ -632,7 +670,7 @@ const Terminal: React.FC<TerminalProps> = ({ initial }) => {
         }))
       }
     }
-  }, [clicked, cursor.posX, cursor.posY, cursor.style, hit])
+  }, [clicked, cursor.posX, cursor.posY, cursor.style, hit, isMax])
 
   useEffect(() => {
     const keyArrowEvents = ['keyup', 'keydown', 'keypress']
@@ -676,23 +714,33 @@ const Terminal: React.FC<TerminalProps> = ({ initial }) => {
 
   return (
     <StyledTerminal
+      id={`${id}`}
       ref={terminalRef}
       onClick={handleClick}
       onMouseDown={onMouseDown}
+      isMax={isMax}
       className={!selected ? 'active' : ''}
       style={{
-        left: `${state.left}px`,
-        top: `${state.top}px`,
-        width: `${state.width}px`,
+        left: isMax ? 0 : `${state.left}px`,
+        right: isMax ? 0 : undefined,
+        top: isMax ? 50 : `${state.top}px`,
+        width: isMax ? undefined : `${state.width}px`,
         height: `${state.height}px`,
+        margin: !isMax ? undefined : '1rem',
         cursor: cursor.style,
       }}
     >
       <StyledHeading onMouseDown={onMouseDown} ref={titleRef}>
         <StyledBtnContainer>
           <StyledBtnRed className={!selected ? 'deactive' : ''} />
-          <StyledBtnYellow className={!selected ? 'deactive' : ''} />
-          <StyledBtnGreen className={!selected ? 'deactive' : ''} />
+          <StyledBtnYellow
+            className={!selected ? 'deactive' : ''}
+            onClick={minimize}
+          />
+          <StyledBtnGreen
+            className={!selected ? 'deactive' : ''}
+            onClick={maximize}
+          />
         </StyledBtnContainer>
         <StyledTitle>Children</StyledTitle>
       </StyledHeading>

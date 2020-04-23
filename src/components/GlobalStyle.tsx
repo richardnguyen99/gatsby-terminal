@@ -21,9 +21,6 @@ const GlobalStyle = createGlobalStyle`
 
   html {
     line-height: 1.15; /* 1 */
-
-    overflow-x: hidden;
-    overflow-y: scroll;
   }
 
   /* Sections
