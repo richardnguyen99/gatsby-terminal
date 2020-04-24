@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import React, { createContext, useReducer } from 'react'
 
-import { createReducer } from '@utils'
+import { createReducer, generateID } from '@utils'
 
 const initialState = {
   number: 1,
   tabs: [
     {
-      id: 1,
+      id: generateID(),
       type: 'terminal',
       isFocused: true,
-      isMaximized: true,
+      isMaximized: false,
     },
   ],
 }
@@ -28,6 +28,11 @@ const tabReducer = createReducer<Payload>(initialState, {
   }),
   ON_MAXIMIZED: (state, payload) => ({
     ...state,
+    tabs: payload.tabs,
+  }),
+  CREATED: (state, payload) => ({
+    ...state,
+    number: payload.number,
     tabs: payload.tabs,
   }),
   DELETED: (state, payload) => ({

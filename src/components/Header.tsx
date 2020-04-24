@@ -10,6 +10,8 @@ import styled from 'styled-components'
 import Icon, { Octoface, Calendar, Gear, Clock } from '@primer/octicons-react'
 
 import { ThemeContext } from '@context/ThemeContext'
+import { TabContext } from '@context/TabContext'
+import { generateID } from '@utils'
 
 const StyledNavbar = styled.nav`
   /* Declare position of navbar */
@@ -108,7 +110,7 @@ const StyledNavItem = styled(StyledItem)`
     border-top-left-radius: 4px;
   }
 
-  &#info {
+  &#terminal {
     border-bottom-right-radius: 4px;
     border-bottom-left-radius: 4px;
   }
@@ -198,11 +200,35 @@ export const ControlBandGroup: React.FC<{ id: string }> = ({ id }) => {
   const ref = useRef<HTMLUListElement>(null)
 
   const [show, setShow] = useState(false)
+  const [error, setError] = useState('')
 
   const themeContext = useContext(ThemeContext)
+  const tabContext = useContext(TabContext)
 
   const handleClick = (): void => {
     setShow(!show)
+  }
+
+  const handleNewTerminal = (): void => {
+    if (tabContext.state.number === 5) {
+      setError('Maxium amount of tabs. Cannot create more.')
+    } else {
+      const newTabs = tabContext.state.tabs
+      newTabs.push({
+        id: generateID(),
+        type: 'terminal',
+        isFocused: true,
+        isMaximized: true,
+      })
+
+      tabContext.dispatch({
+        type: 'CREATED',
+        payload: {
+          number: tabContext.state.number + 1,
+          tabs: newTabs,
+        },
+      })
+    }
   }
 
   const handleClickOutSide = useCallback(
@@ -241,7 +267,9 @@ export const ControlBandGroup: React.FC<{ id: string }> = ({ id }) => {
               Switch to&nbsp;
               {themeContext.theme === 'dark' ? 'light' : 'dark'}
             </StyledNavItem>
-            <StyledNavItem id="info">Config</StyledNavItem>
+            <StyledNavItem id="terminal" onClick={handleNewTerminal}>
+              New terminal
+            </StyledNavItem>
           </StyledNav>
         </StyledCollapseMenu>
       ) : null}

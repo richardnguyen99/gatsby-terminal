@@ -1,5 +1,5 @@
 import createReducer from './createReducer'
 import TreeDir from './treeDir'
+import generateID from './generateID'
 
-// eslint-disable-next-line import/prefer-default-export
-export { createReducer, TreeDir }
+export { createReducer, TreeDir, generateID }

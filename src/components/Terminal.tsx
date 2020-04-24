@@ -171,7 +171,7 @@ const StyledTerminal = styled.div<StyledTerminalProps>`
     box-shadow: var(--body__boxshadow--focus-off);
   }
 
-  transition: all 200ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  /*transition: all 200ms cubic-bezier(0.175, 0.885, 0.32, 1.275);*/
 `
 
 const StyledCaret = styled.span<{ blinked?: boolean }>`
@@ -224,7 +224,7 @@ const Caret: React.FC = ({ children }) => {
 }
 
 interface TerminalProps {
-  id: number
+  id: string
   isMax: boolean
   initial?: {
     width?: number
@@ -467,6 +467,16 @@ const Terminal: React.FC<TerminalProps> = ({ id, initial, isMax }) => {
     },
     [commandString, currentDir, dirContext, prompt, text, dir]
   )
+
+  const onDelete = (): void => {
+    tabContext.dispatch({
+      type: 'DELETED',
+      payload: {
+        number: tabContext.state.number + 1,
+        tabs: tabContext.state.tabs.filter(tab => tab.id !== id),
+      },
+    })
+  }
 
   const minimize = (): void => {
     if (isMax) {
@@ -725,14 +735,17 @@ const Terminal: React.FC<TerminalProps> = ({ id, initial, isMax }) => {
         right: isMax ? 0 : undefined,
         top: isMax ? 50 : `${state.top}px`,
         width: isMax ? undefined : `${state.width}px`,
-        height: `${state.height}px`,
+        height: isMax ? '85vh' : `${state.height}px`,
         margin: !isMax ? undefined : '1rem',
         cursor: cursor.style,
       }}
     >
       <StyledHeading onMouseDown={onMouseDown} ref={titleRef}>
         <StyledBtnContainer>
-          <StyledBtnRed className={!selected ? 'deactive' : ''} />
+          <StyledBtnRed
+            className={!selected ? 'deactive' : ''}
+            onClick={onDelete}
+          />
           <StyledBtnYellow
             className={!selected ? 'deactive' : ''}
             onClick={minimize}
