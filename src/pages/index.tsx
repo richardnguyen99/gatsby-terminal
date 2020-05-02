@@ -10,7 +10,6 @@ const IndexPage: React.FC = () => {
     <Layout>
       <SEO title="Home" />
       {tabContext.state.tabs.map(tab => {
-        console.log(tab.isMaximized)
         if (tab.type === 'terminal') {
           return (
             <Terminal

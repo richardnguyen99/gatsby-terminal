@@ -53,7 +53,6 @@ const StyledTitle = styled.h1`
   color: var(--terminal__text);
   line-height: 1;
   height: 12px;
-
   font-family: --apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
     Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   font-size: 12px;
@@ -81,11 +80,9 @@ const StyledHeading = styled.div`
 
 const StyledConsole = styled.p`
   padding: 0.5rem;
-
   font-family: 'SF Mono', Monaco, Menlo, monospace;
   font-weight: normal;
   font-size: 14px;
-
   color: var(--terminal__text);
   background: var(--terminal__background);
 
@@ -378,7 +375,12 @@ const Terminal: React.FC<TerminalProps> = ({ id, initial, isMax }) => {
         if (parsedCommand[0] === 'clear') {
           setText(``)
         } else if (parsedCommand[0] === 'echo') {
-          setText(`${text}\n${parsedCommand.slice(1).join(' ')}\n`)
+          setText(
+            `${text}\n${prompt} ${commandString}\n${parsedCommand
+              .slice(1)
+              .join(' ')}\n`
+          )
+          // setText(`${text}\n${prompt} ${commandString}\n`)
         } else if (parsedCommand[0] === 'mkdir') {
           try {
             dir.add(
@@ -398,6 +400,17 @@ const Terminal: React.FC<TerminalProps> = ({ id, initial, isMax }) => {
             setText(`${text}\n${prompt} ${commandString}\n`)
           } catch (error) {
             setText(`${text}\n${prompt} ${commandString}\n${error}\n`)
+          }
+        } else if (parsedCommand[0] === 'ls') {
+          const node = dir.bfs({ name: currentDir })
+
+          if (node !== null) {
+            const children = node.children.map(({ name }) => name)
+            setText(
+              `${text}\n${prompt} ${commandString}\n${children.map(
+                child => child
+              )}`
+            )
           }
         } else if (parsedCommand[0] === 'cd') {
           if (!parsedCommand[1]) {

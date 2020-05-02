@@ -50,7 +50,7 @@ const DirProvider: React.FC = ({ children }) => {
   // Update localStorage after dispatch or state changes.
   useEffect(() => {
     setDir({ ...state })
-  }, [state, dispatch])
+  }, [state, dispatch, setDir])
 
   return (
     <DirContext.Provider value={{ state, dispatch }}>

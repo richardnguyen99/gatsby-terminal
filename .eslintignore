@@ -1,7 +1,7 @@
 .cache/
-.node_modules/
-.public/
-
+node_modules/
+public/
+coverage/
 # Ignore this file because it's automatically generated
 src/graphql-types.ts
 
